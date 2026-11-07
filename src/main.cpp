@@ -1,10 +1,9 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include "secrets.h"
 
 #define LED1_PIN 5
-#define WIFI_SSID "YOUR_WIFI_SSID"
-#define WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
 
 #define MQTT_BROKER_URI "mqtt://broker.hivemq.com"
 #define MQTT_BROKER_HOST "broker.hivemq.com"
