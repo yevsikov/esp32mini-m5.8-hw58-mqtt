@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include <esp_system.h>
 #include "secrets.h"
 
 #define LED1_PIN 5
@@ -8,8 +9,11 @@
 #define MQTT_BROKER_URI "mqtt://broker.hivemq.com"
 #define MQTT_BROKER_HOST "broker.hivemq.com"
 #define MQTT_BROKER_PORT 1883
+#define TEST_PUBLISH_TOPIC "EMB1/yevsykov/bme280/temp"
+#define TEST_PUBLISH_INTERVAL 20000UL
 
 const char *mqttTopics[] = {
+  TEST_PUBLISH_TOPIC,
   "EMB1/teacher/bme280/temp",
   "EMB1/teacher/bme280/hum",
   "EMB1/teacher/bme280/pres",
@@ -33,8 +37,9 @@ const char *wifiStatusName(wl_status_t status) {
 }
 
 void onMqttMessage(char *topic, byte *payload, unsigned int length) {
+  Serial.print("MQTT received: ");
   Serial.print(topic);
-  Serial.print(": ");
+  Serial.print(" = ");
   Serial.write(payload, length);
   Serial.println();
 }
@@ -134,6 +139,7 @@ void setup() {
   Serial.println();
   Serial.println("ESP32 booted; serial output is working.");
   pinMode(LED1_PIN, OUTPUT);
+  randomSeed(esp_random());
 
   mqttClient.setServer(MQTT_BROKER_HOST, MQTT_BROKER_PORT);
   mqttClient.setCallback(onMqttMessage);
@@ -150,6 +156,29 @@ void loop() {
     connectToMqtt();
   }
   mqttClient.loop();
+
+  static bool hasPublishedTestValue = false;
+  static unsigned long lastTestPublish = 0;
+  const unsigned long now = millis();
+  if (!hasPublishedTestValue || now - lastTestPublish >= TEST_PUBLISH_INTERVAL) {
+    const int value = random(1, 31);
+    char payload[4];
+    snprintf(payload, sizeof(payload), "%d", value);
+
+    Serial.print("MQTT publish: ");
+    Serial.print(TEST_PUBLISH_TOPIC);
+    Serial.print(" = ");
+    Serial.print(payload);
+    Serial.print("... ");
+    if (mqttClient.publish(TEST_PUBLISH_TOPIC, payload)) {
+      Serial.println("sent");
+    } else {
+      Serial.println("failed");
+    }
+
+    hasPublishedTestValue = true;
+    lastTestPublish = now;
+  }
 
   static unsigned long lastHeartbeat = 0;
   if (millis() - lastHeartbeat >= 5000) {
