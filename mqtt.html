@@ -26,7 +26,7 @@
     client.on('connect', () => {
         console.log('Connected to MQTT');
 
-        client.subscribe('EMB1/teacher/bme280/#');
+        client.subscribe('EMB1/+/bme280/#');
 
         if (!testMessagePublished) {
             testMessagePublished = true;
