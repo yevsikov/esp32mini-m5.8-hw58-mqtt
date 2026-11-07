@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MQTT Weather Monitor</title>
+</head>
+<body>
+
+<h1>ESP32 Telemetry</h1>
+
+<div>Temperature: <span id="temp">--</span></div>
+<div>Humidity: <span id="hum">--</span></div>
+<div>Pressure: <span id="pres">--</span></div>
+
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+<script>
+    // Connect to MQTT broker over WebSocket
+    const client = mqtt.connect(
+        'ws://broker.hivemq.com:8000/mqtt'
+    );
+
+    const values = {};
+
+    client.on('connect', () => {
+        console.log('Connected to MQTT');
+
+        client.subscribe('EMB1/teacher/bme280/#');
+    });
+
+    client.on('message', (topic, payload) => {
+        const value = payload.toString();
+
+        console.log(topic, value);
+
+        if (topic.endsWith('/temp')) {
+            document.getElementById('temp').textContent = value;
+        }
+
+        if (topic.endsWith('/hum')) {
+            document.getElementById('hum').textContent = value;
+        }
+
+        if (topic.endsWith('/pres')) {
+            document.getElementById('pres').textContent = value;
+        }
+
+    });
+</script>
+
+</body>
+</html>
