@@ -3,3 +3,4 @@
 .dummy
 .vscode/*
 compile_commands.json
+/include/secrets.h
