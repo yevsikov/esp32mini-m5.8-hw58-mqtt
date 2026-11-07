@@ -10,6 +10,7 @@
 <div>Temperature: <span id="temp">--</span></div>
 <div>Humidity: <span id="hum">--</span></div>
 <div>Pressure: <span id="pres">--</span></div>
+<div>Test message: <span id="publish-status">Waiting for MQTT connection...</span></div>
 
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
@@ -20,11 +21,33 @@
     );
 
     const values = {};
+    let testMessagePublished = false;
 
     client.on('connect', () => {
         console.log('Connected to MQTT');
 
         client.subscribe('EMB1/teacher/bme280/#');
+
+        if (!testMessagePublished) {
+            testMessagePublished = true;
+            const message = `Test message from HTML page opened at ${new Date().toLocaleString()}`;
+            client.publish('test/topic/', message, (error) => {
+                const status = document.getElementById('publish-status');
+                if (error) {
+                    console.error('Failed to publish test message:', error);
+                    status.textContent = 'Failed to send';
+                    return;
+                }
+
+                console.log('Test message published to test/topic/');
+                status.textContent = 'Sent to test/topic/';
+            });
+        }
+    });
+
+    client.on('error', (error) => {
+        console.error('MQTT connection error:', error);
+        document.getElementById('publish-status').textContent = 'MQTT connection error';
     });
 
     client.on('message', (topic, payload) => {
